@@ -30,6 +30,10 @@ function App() {
             setCurrentStateText('Connected. Please tap the tag to the reader.');
           } else if (packet.event === 'handle_added') {
             setCurrentHandle(packet.data.handle);
+          } else if (packet.event === 'handle_removed') {
+            setCurrentStateText('Tag was removed from the reader. You can tap another one.');
+          } else if (packet.event === 'handle_not_compatible') {
+            setCurrentStateText('Detected a tag that is not HaLo. Please try a different tag.');
           }
         });
 
@@ -49,30 +53,34 @@ function App() {
 
   useEffect(() => {
     async function processHaloTag() {
-      let res = await wspRef.current.sendRequest({
-        "type": "exec_halo",
-        "handle": currentHandle,
-        "command": {
-          "name": "sign",
-          "message": "010203",
-          "keyNo": 1
-        }
-      });
+      try {
+        let res = await wspRef.current.sendRequest({
+          "type": "exec_halo",
+          "handle": currentHandle,
+          "command": {
+            "name": "sign",
+            "message": "010203",
+            "keyNo": 1
+          }
+        });
 
-      console.log('res1', res);
+        console.log('res1', res);
 
-      let res2 = await wspRef.current.sendRequest({
-        "type": "exec_halo",
-        "handle": currentHandle,
-        "command": {
-          "name": "sign",
-          "message": "04050607",
-          "keyNo": 1
-        }
-      });
+        let res2 = await wspRef.current.sendRequest({
+          "type": "exec_halo",
+          "handle": currentHandle,
+          "command": {
+            "name": "sign",
+            "message": "04050607",
+            "keyNo": 1
+          }
+        });
 
-      console.log('res2', res2);
-      setCurrentStateText(JSON.stringify(res) + '\n\n' + JSON.stringify(res2));
+        console.log('res2', res2);
+        setCurrentStateText(JSON.stringify(res) + '\n\n' + JSON.stringify(res2));
+      } catch (e) {
+        setCurrentStateText('There was a problem when communicating with the tag.');
+      }
     }
 
     if (currentHandle) {
